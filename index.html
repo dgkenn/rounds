@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rounds — Mobile ordering for nightlife</title>
+<meta name="description" content="Rounds is a mobile ordering and payment layer for high-volume bars and nightclubs. Guests order and pay on their phone; staff confirm with a single scan; orders post straight to the POS." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,460;0,9..144,560;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#0C0B09;
+    --paper:#F1EADD;
+    --paper-dim:#B7AE9F;
+    --paper-faint:#736B5E;
+    --brass:#D2AC62;
+    --brass-deep:#A8853F;
+    --line:rgba(241,234,221,0.14);
+    --line-soft:rgba(241,234,221,0.07);
+    --panel:rgba(10,9,7,0.85);
+    --maxw:1200px;
+    --ease:cubic-bezier(0.22,1,0.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--ink);color:var(--paper);font-family:"Hanken Grotesk",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;position:relative;}
+
+  #scene{position:fixed;inset:0;width:100%;height:100%;z-index:0;filter:blur(3px) saturate(1.25);opacity:0.78;transform:scale(1.04);}
+  .scrim{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:
+      linear-gradient(180deg, rgba(8,7,6,0.88) 0%, rgba(8,7,6,0.32) 16%, rgba(8,7,6,0.30) 70%, rgba(8,7,6,0.85) 100%),
+      linear-gradient(95deg, rgba(8,7,6,0.86) 0%, rgba(8,7,6,0.5) 46%, rgba(8,7,6,0.12) 74%, rgba(8,7,6,0.4) 100%),
+      radial-gradient(130% 130% at 50% 50%, transparent 52%, rgba(0,0,0,0.6) 100%);}
+  .grain{position:fixed;inset:0;z-index:2;pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");opacity:0.04;mix-blend-mode:overlay;}
+
+  .wrap{position:relative;z-index:3;max-width:var(--maxw);margin:0 auto;padding:0 40px;}
+
+  header{position:absolute;top:0;left:0;right:0;z-index:10;}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:34px 0 0;}
+  .mark{font-family:"Fraunces",serif;font-weight:560;font-size:21px;letter-spacing:0.01em;display:flex;align-items:center;gap:11px;}
+  .mark .dot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--brass);display:inline-block;box-shadow:0 0 10px rgba(210,172,98,0.6);}
+  .nav .navlinks{display:flex;gap:30px;align-items:center;}
+  .nav a.nlink{font-size:12.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--paper-dim);text-decoration:none;transition:color .4s var(--ease);}
+  .nav a.nlink:hover{color:var(--paper);}
+
+  .hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding-top:120px;padding-bottom:64px;position:relative;}
+  .eyebrow{font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:var(--brass);margin-bottom:34px;display:flex;align-items:center;gap:16px;text-shadow:0 1px 14px rgba(0,0,0,0.6);}
+  .eyebrow::before{content:"";width:48px;height:1px;background:var(--brass);opacity:.6;}
+  .hero h1{font-family:"Fraunces",serif;font-weight:380;font-size:clamp(48px,8.4vw,118px);line-height:0.96;letter-spacing:-0.018em;max-width:13ch;text-shadow:0 2px 40px rgba(0,0,0,0.55);}
+  .hero h1 em{font-style:italic;font-weight:400;color:var(--brass);}
+  .hero-foot{margin-top:54px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:40px;}
+  .hero-sub{font-size:clamp(16px,1.5vw,19px);color:var(--paper);max-width:48ch;line-height:1.62;text-shadow:0 1px 18px rgba(0,0,0,0.8);}
+  .cta{display:inline-flex;align-items:center;gap:12px;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:var(--paper);text-decoration:none;border:1px solid var(--line);padding:16px 26px;border-radius:40px;white-space:nowrap;transition:all .45s var(--ease);background:rgba(8,7,6,0.35);backdrop-filter:blur(4px);}
+  .cta .arrow{transition:transform .45s var(--ease);}
+  .cta:hover{background:var(--brass);border-color:var(--brass);color:var(--ink);}
+  .cta:hover .arrow{transform:translateX(5px);}
+
+  .masthead{position:absolute;top:50%;right:0;transform:translateY(-50%);text-align:right;display:flex;flex-direction:column;gap:18px;border-right:1px solid var(--line);padding-right:22px;}
+  .masthead span{font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--paper-faint);line-height:1.4;text-shadow:0 1px 12px rgba(0,0,0,0.7);}
+  .masthead span b{color:var(--paper-dim);font-weight:500;display:block;}
+
+  section.block,.contact-sec,footer{position:relative;z-index:3;background:var(--panel);backdrop-filter:blur(6px);}
+  section.block{padding:118px 0;border-top:1px solid var(--line-soft);}
+  .idx{font-size:12px;letter-spacing:0.26em;text-transform:uppercase;color:var(--brass);margin-bottom:38px;display:flex;align-items:center;gap:14px;}
+  .idx::before{content:"";width:24px;height:1px;background:var(--brass);opacity:.55;}
+  .lede{font-family:"Fraunces",serif;font-weight:380;font-size:clamp(26px,3.6vw,46px);line-height:1.16;letter-spacing:-0.01em;max-width:20ch;}
+  .lede.wide{max-width:24ch;}
+  .lede em{font-style:italic;color:var(--brass);font-weight:400;}
+  .two{display:grid;grid-template-columns:1fr 1.05fr;gap:64px;align-items:start;}
+  .body-copy{font-size:17px;color:var(--paper-dim);line-height:1.75;max-width:44ch;}
+  .body-copy + .body-copy{margin-top:22px;}
+
+  /* pain grid */
+  .pains{display:grid;grid-template-columns:1fr 1fr;margin-top:34px;border-top:1px solid var(--line);}
+  .pain{padding:38px 40px 42px 0;border-bottom:1px solid var(--line-soft);}
+  .pain:nth-child(odd){border-right:1px solid var(--line-soft);}
+  .pain:nth-child(even){padding-left:40px;padding-right:0;}
+  .pain .pnum{font-family:"Fraunces",serif;font-style:italic;font-size:14px;color:var(--brass);display:block;margin-bottom:18px;}
+  .pain h4{font-family:"Fraunces",serif;font-weight:460;font-size:23px;letter-spacing:-0.01em;margin-bottom:13px;line-height:1.2;}
+  .pain p{font-size:15.5px;color:var(--paper-dim);line-height:1.65;max-width:38ch;}
+  .turn{margin-top:54px;}
+
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:24px;border-top:1px solid var(--line);}
+  .step{padding:40px 32px 48px 0;border-right:1px solid var(--line-soft);position:relative;}
+  .step:last-child{border-right:none;}
+  .step .num{font-family:"Fraunces",serif;font-style:italic;font-size:15px;color:var(--brass);margin-bottom:30px;display:block;}
+  .step h3{font-family:"Fraunces",serif;font-weight:460;font-size:27px;letter-spacing:-0.01em;margin-bottom:16px;}
+  .step p{font-size:15.5px;color:var(--paper-dim);line-height:1.65;max-width:30ch;}
+  .step .ring{position:absolute;top:42px;right:24px;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line);}
+
+  .feat{display:flex;flex-wrap:wrap;gap:14px;margin-top:48px;}
+  .pill{font-size:12.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--paper-dim);border:1px solid var(--line);border-radius:30px;padding:11px 20px;}
+
+  /* faq */
+  .faq-head{margin-bottom:8px;}
+  .faq{max-width:880px;border-top:1px solid var(--line);margin-top:14px;}
+  details.qa{border-bottom:1px solid var(--line-soft);}
+  details.qa summary{list-style:none;cursor:pointer;padding:26px 54px 26px 0;position:relative;display:flex;gap:22px;align-items:baseline;font-size:18px;line-height:1.4;color:var(--paper);font-weight:500;transition:color .3s var(--ease);}
+  details.qa summary::-webkit-details-marker{display:none;}
+  details.qa summary:hover{color:var(--brass);}
+  .qa .qn{font-family:"Fraunces",serif;font-style:italic;font-size:14px;color:var(--brass);flex:none;width:30px;}
+  .qa .qmark{position:absolute;right:4px;top:30px;width:17px;height:17px;flex:none;}
+  .qa .qmark::before,.qa .qmark::after{content:"";position:absolute;background:var(--brass);transition:transform .35s var(--ease),opacity .35s var(--ease);}
+  .qa .qmark::before{width:17px;height:1.5px;top:8px;left:0;}
+  .qa .qmark::after{width:1.5px;height:17px;left:8px;top:0;}
+  details[open] .qmark::after{opacity:0;transform:scaleY(0);}
+  .qa .ans{padding:2px 54px 30px 52px;color:var(--paper-dim);font-size:16px;line-height:1.72;max-width:66ch;}
+  details[open] .ans{animation:ansfade .5s var(--ease);}
+  @keyframes ansfade{from{opacity:0;transform:translateY(-7px);}to{opacity:1;transform:none;}}
+
+  .contact-sec{padding:130px 0 70px;border-top:1px solid var(--line-soft);text-align:center;}
+  .contact-sec .ringbig{width:64px;height:64px;border-radius:50%;border:1.5px solid var(--brass);margin:0 auto 40px;opacity:.75;box-shadow:0 0 30px rgba(210,172,98,0.25);}
+  .contact-sec h2{font-family:"Fraunces",serif;font-weight:380;font-size:clamp(32px,5vw,62px);line-height:1.05;letter-spacing:-0.015em;margin-bottom:22px;}
+  .contact-sec h2 em{font-style:italic;color:var(--brass);font-weight:400;}
+  .contact-sec p.cline{color:var(--paper-dim);font-size:17px;max-width:42ch;margin:0 auto 38px;line-height:1.6;}
+  .mailto{font-family:"Fraunces",serif;font-size:clamp(20px,2.5vw,30px);color:var(--paper);text-decoration:none;border-bottom:1px solid var(--brass);padding-bottom:5px;transition:color .4s var(--ease);}
+  .mailto:hover{color:var(--brass);}
+
+  footer{border-top:1px solid var(--line-soft);padding:34px 0 44px;}
+  .foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--paper-faint);}
+  .foot .mark{font-size:15px;color:var(--paper-dim);}
+  .foot .mark .dot{width:7px;height:7px;}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity 1s var(--ease),transform 1s var(--ease);}
+  .reveal.in{opacity:1;transform:none;}
+  .hero .eyebrow,.hero h1,.hero .hero-foot{opacity:0;transform:translateY(24px);animation:rise 1.1s var(--ease) forwards;}
+  .hero h1{animation-delay:.12s;}
+  .hero .hero-foot{animation-delay:.28s;}
+  @keyframes rise{to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){.reveal,.hero .eyebrow,.hero h1,.hero .hero-foot{opacity:1!important;transform:none!important;animation:none!important;}}
+
+  @media(max-width:900px){
+    .masthead{display:none;}
+    .navlinks{gap:20px;}
+    .two{grid-template-columns:1fr;gap:36px;}
+    .steps{grid-template-columns:1fr;}
+    .step{border-right:none;border-bottom:1px solid var(--line-soft);padding:34px 0 36px;}
+    .step:last-child{border-bottom:none;}
+    .step .ring{display:none;}
+    .pains{grid-template-columns:1fr;}
+    .pain{border-right:none!important;padding:32px 0 34px!important;}
+  }
+  @media(max-width:560px){
+    .wrap{padding:0 22px;}
+    section.block{padding:84px 0;}
+    .hero{padding-top:104px;}
+    .hero-foot{flex-direction:column;align-items:flex-start;gap:30px;}
+    .navlinks a.nlink:not(.contactlink){display:none;}
+    details.qa summary{font-size:16.5px;padding-right:44px;}
+    .qa .ans{padding-left:0;padding-right:0;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+<div class="scrim"></div>
+<div class="grain"></div>
+
+<header>
+  <div class="wrap">
+    <nav class="nav">
+      <div class="mark"><span class="dot"></span>Rounds</div>
+      <div class="navlinks">
+        <a class="nlink" href="#how">How it works</a>
+        <a class="nlink" href="#faq">FAQ</a>
+        <a class="nlink contactlink" href="#contact">Contact</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap" style="width:100%;position:relative;">
+      <div class="masthead">
+        <span><b>For</b> bars &amp; nightclubs</span>
+        <span><b>Built on</b> your POS</span>
+        <span><b>Based in</b> Providence, RI</span>
+      </div>
+      <div class="eyebrow">Mobile ordering for nightlife</div>
+      <h1>Your phone <em>is</em> your order.</h1>
+      <div class="hero-foot">
+        <p class="hero-sub">Guests order and pay before they reach the bar. Your staff pour instead of running cards, the line keeps moving, and nothing walks out unpaid.</p>
+        <a class="cta" href="#contact">Request a demo <span class="arrow">&rarr;</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 PROBLEM -->
+  <section class="block">
+    <div class="wrap">
+      <div class="idx">01 &mdash; Every busy night</div>
+      <p class="lede wide">A packed bar should be your best night &mdash; <em>not your leakiest.</em></p>
+      <div class="pains">
+        <div class="pain">
+          <span class="pnum">i.</span>
+          <h4>Tabs walk out the door</h4>
+          <p>Unpaid tabs cost bars an estimated 2&ndash;4% of revenue a year &mdash; money that quietly leaves with the customer, every single weekend.</p>
+        </div>
+        <div class="pain">
+          <span class="pnum">ii.</span>
+          <h4>The bar is the bottleneck</h4>
+          <p>Every minute a guest spends trying to catch a bartender's eye is a drink you didn't sell. On your busiest night, you physically can't move fast enough.</p>
+        </div>
+        <div class="pain">
+          <span class="pnum">iii.</span>
+          <h4>Cards pile up behind the bar</h4>
+          <p>Held cards get lost, mismatched, and left behind. Closing them out one at a time eats the very hours you make the most money.</p>
+        </div>
+        <div class="pain">
+          <span class="pnum">iv.</span>
+          <h4>Orders get lost in the noise</h4>
+          <p>Drinks get misheard, remade, and comped. Wasted product, wasted time, and a smaller tip at the end of it.</p>
+        </div>
+      </div>
+      <p class="lede turn">Rounds takes the transaction <em>out of the bottleneck</em> entirely.</p>
+    </div>
+  </section>
+
+  <!-- 02 HOW -->
+  <section class="block" id="how">
+    <div class="wrap">
+      <div class="idx">02 &mdash; How it works</div>
+      <p class="lede">Three steps. <em>A few seconds.</em></p>
+      <div class="steps">
+        <div class="step"><span class="num">i.</span><span class="ring"></span><h3>Order</h3><p>Guests choose their drink and pay on their phone, tip included, before they reach the bar.</p></div>
+        <div class="step"><span class="num">ii.</span><span class="ring"></span><h3>Scan</h3><p>Staff confirm the prepaid order with a single scan on their own device.</p></div>
+        <div class="step"><span class="num">iii.</span><span class="ring"></span><h3>Pour</h3><p>The order posts to the POS as a paid check. The drink is handed over. Done.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 PAYOFF -->
+  <section class="block">
+    <div class="wrap">
+      <div class="idx">03 &mdash; The payoff</div>
+      <div class="two">
+        <p class="lede wide">More poured. Fewer lost. <em>A cleaner close.</em></p>
+        <div>
+          <p class="body-copy">When the slowest part of every order disappears, the same team serves more guests in the same hours. The revenue that used to walk out stays in the till. And the night ends with a count that already balances.</p>
+          <p class="body-copy">Same staff. Same space. More of every night turned into sales &mdash; without asking your bartenders to change how they work.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 VENUES -->
+  <section class="block">
+    <div class="wrap">
+      <div class="idx">04 &mdash; Built on your system</div>
+      <div class="two">
+        <p class="lede wide">It works the way your <em>team already does.</em></p>
+        <div>
+          <p class="body-copy">Rounds connects to the point-of-sale you already run. Orders flow in as paid checks, so your system stays the source of truth and your staff keep working exactly as they do today. No second screen to babysit during a rush.</p>
+          <div class="feat">
+            <span class="pill">Faster service</span>
+            <span class="pill">Fewer walkouts</span>
+            <span class="pill">Cleaner reconciliation</span>
+            <span class="pill">No second system</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 FAQ -->
+  <section class="block" id="faq">
+    <div class="wrap">
+      <div class="idx faq-head">05 &mdash; Questions</div>
+      <p class="lede" style="margin-bottom:8px;">Everything else, <em>answered.</em></p>
+      <div class="faq">
+
+        <details class="qa"><summary><span class="qn">01</span><span>Does Rounds replace our point-of-sale?</span><span class="qmark"></span></summary>
+          <div class="ans">No. Rounds runs alongside the POS you already use. Orders placed through Rounds arrive in your system as completed, paid checks, so your POS stays the single source of truth for sales, reporting, and end-of-night reconciliation. Nothing you currently rely on changes.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">02</span><span>Which POS systems does Rounds work with?</span><span class="qmark"></span></summary>
+          <div class="ans">Rounds integrates directly with Toast first &mdash; the most widely used point-of-sale in bars and nightlife. The platform is built so additional POS systems can be added over time. If you run Toast, you're ready to go.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">03</span><span>Do our bartenders have to learn a new system?</span><span class="qmark"></span></summary>
+          <div class="ans">No &mdash; and this is the point. Your bartenders keep working in the POS they already know. A Rounds order appears the same way any other order would, already paid. There's no parallel system to manage mid-rush, which is exactly where earlier attempts at this failed and Rounds doesn't.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">04</span><span>What hardware do we need to run it?</span><span class="qmark"></span></summary>
+          <div class="ans">Almost none. Staff confirm orders on a phone or tablet your team likely already has. There's no proprietary terminal to install and no expensive equipment to buy. Getting started is a software setup, not a hardware project.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">05</span><span>How does a guest start using Rounds &mdash; is there an app to download?</span><span class="qmark"></span></summary>
+          <div class="ans">No download required. Guests scan a code at the venue, which opens Rounds in their phone's browser. First-time setup takes about two minutes &mdash; name, a payment method, and a default tip. After that, placing an order takes seconds.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">06</span><span>How are payments processed and paid out to us?</span><span class="qmark"></span></summary>
+          <div class="ans">Guests pay securely in the app at the moment they order, gratuity included. Funds settle to the venue through standard, regulated payment infrastructure and are paid out on a regular schedule, just like your existing card payments. Because every order is paid up front, there are no open tabs left to settle at close.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">07</span><span>How are tips handled, and who do they go to?</span><span class="qmark"></span></summary>
+          <div class="ans">Gratuity is built into the order when the guest pays, with sensible defaults that encourage generous tipping. Tips are attributed to the order and flow to your staff through your normal tip process &mdash; your pooling or payout setup doesn't have to change.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">08</span><span>How does Rounds reduce walkouts and chargebacks?</span><span class="qmark"></span></summary>
+          <div class="ans">Payment is captured before the drink is handed over, so the classic open-tab walkout simply can't happen &mdash; there's nothing left unpaid to walk out on. And because every transaction is a clean, itemized, guest-authorized charge, disputes are far easier to defend than a manually run tab.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">09</span><span>Is guest payment information secure?</span><span class="qmark"></span></summary>
+          <div class="ans">Yes. Payment details are encrypted and tokenized through regulated, PCI-compliant payment infrastructure. Your staff never see or handle a guest's card, and sensitive payment data never sits behind your bar.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">10</span><span>Does Rounds handle age verification?</span><span class="qmark"></span></summary>
+          <div class="ans">Rounds does not replace your legal responsibility to verify age. Your staff check ID at the point of service exactly as they do today before handing over any drink. Rounds handles ordering and payment; your team keeps full control over compliance.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">11</span><span>Can guests buy a round for friends or split an order?</span><span class="qmark"></span></summary>
+          <div class="ans">Yes. A guest can order for themselves or cover a round for the group in a single order. The social "I've got this one" moment works the way it always has &mdash; just without anyone fumbling for a card or doing math at the bar.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">12</span><span>What if a guest's phone dies, or they don't want to use it?</span><span class="qmark"></span></summary>
+          <div class="ans">Rounds is an addition, never a replacement. Any guest who doesn't have it, can't use it, or simply prefers the traditional way orders exactly as they always have. It's never all-or-nothing, and your bar never turns anyone away.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">13</span><span>Will this slow us down on a busy night?</span><span class="qmark"></span></summary>
+          <div class="ans">The opposite &mdash; it's built for high-volume nights specifically. Because the guest has already chosen and paid before they reach the bar, the slowest part of the transaction is gone. Your staff spend their time pouring and serving, not taking orders and running cards.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">14</span><span>What reporting or insights do owners get?</span><span class="qmark"></span></summary>
+          <div class="ans">Owners get a clear view of what's actually happening: sales, tips, your busiest windows, and top-selling items, summarized automatically. Most bars run on a single end-of-night total &mdash; Rounds gives you the detail to staff, stock, and plan with confidence.</div>
+        </details>
+
+        <details class="qa"><summary><span class="qn">15</span><span>What does it cost, and how do we get started?</span><span class="qmark"></span></summary>
+          <div class="ans">Pricing depends on your venue and volume, and it's designed to pay for itself through faster service and recovered walkout revenue. The best next step is a short conversation and a live look at how it works in your room &mdash; get in touch and we'll set it up.</div>
+        </details>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="contact-sec" id="contact">
+    <div class="wrap reveal">
+      <div class="ringbig"></div>
+      <h2>Bring Rounds <em>to your floor.</em></h2>
+      <p class="cline">A four-minute demo is the fastest way to see what it does to your busiest night. No commitment &mdash; just a look.</p>
+      <a class="mailto" href="mailto:hello@rounds.bar">hello@rounds.bar</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div class="mark"><span class="dot"></span>Rounds</div>
+      <div>Providence &middot; Rhode Island</div>
+      <div>&copy; 2026 Rounds</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const canvas = document.getElementById('scene');
+  const ctx = canvas.getContext('2d');
+  const reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  let W,H,DPR,raf,running=true;
+  const HUES=[325,340,268,212,190,38];
+  const pick=a=>a[(Math.random()*a.length)|0];
+  let bokeh=[],beams=[],washes=[],crowd=[];
+
+  function init(){
+    DPR=Math.min(window.devicePixelRatio||1,1.5);
+    W=canvas.width=Math.floor(innerWidth*DPR);
+    H=canvas.height=Math.floor(innerHeight*DPR);
+    canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';
+    const n=innerWidth<700?34:58;
+    bokeh=Array.from({length:n},()=>({x:Math.random()*W,y:Math.random()*H*0.92,r:(Math.random()*46+14)*DPR,hue:pick(HUES),vx:(Math.random()-0.5)*0.10*DPR,vy:-(Math.random()*0.16+0.04)*DPR,ph:Math.random()*Math.PI*2,sp:Math.random()*1.6+0.5,base:Math.random()*0.32+0.18}));
+    beams=Array.from({length:innerWidth<700?3:5},()=>({x:(0.12+0.78*Math.random())*W,hue:pick(HUES),ph:Math.random()*Math.PI*2,sp:Math.random()*0.4+0.18,spread:(Math.random()*0.05+0.03)}));
+    washes=Array.from({length:4},(_,i)=>({hue:HUES[i%HUES.length],ph:Math.random()*Math.PI*2,sp:Math.random()*0.25+0.08,r:(Math.random()*0.3+0.4)}));
+    const count=innerWidth<700?16:30;
+    crowd=Array.from({length:count},(_,i)=>({x:(i+0.5)/count*W+(Math.random()-0.5)*22*DPR,scale:(Math.random()*0.4+0.85),ph:Math.random()*Math.PI*2,sp:Math.random()*1.3+0.7,arm:Math.random()<0.32,phone:Math.random()<0.22,phoneHue:pick([212,190,38,325])}));
+  }
+
+  function draw(t){
+    const time=t*0.001;
+    const period=60/124;
+    const beat=reduce?0.5:Math.pow(0.5+0.5*Math.sin(time/period*Math.PI*2),14);
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#070608';ctx.fillRect(0,0,W,H);
+
+    ctx.globalCompositeOperation='lighter';
+    washes.forEach(w=>{
+      const cx=W*(0.5+0.42*Math.sin(time*w.sp+w.ph));
+      const cy=H*(0.42+0.32*Math.cos(time*w.sp*0.8+w.ph));
+      const R=Math.max(W,H)*w.r;
+      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+      g.addColorStop(0,`hsla(${w.hue},85%,55%,0.16)`);
+      g.addColorStop(1,`hsla(${w.hue},85%,55%,0)`);
+      ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    });
+
+    beams.forEach(b=>{
+      const ang=Math.sin(time*b.sp+b.ph)*0.5;
+      const ox=b.x,oy=-20*DPR,len=H*1.15,half=len*b.spread;
+      const dx=Math.sin(ang),dy=Math.cos(ang);
+      const ex=ox+dx*len,ey=oy+dy*len,px=-dy,py=dx;
+      ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ex+px*half,ey+py*half);ctx.lineTo(ex-px*half,ey-py*half);ctx.closePath();
+      const g=ctx.createLinearGradient(ox,oy,ex,ey);const a=0.05+0.05*beat;
+      g.addColorStop(0,`hsla(${b.hue},90%,65%,${a})`);
+      g.addColorStop(0.5,`hsla(${b.hue},90%,60%,${a*0.5})`);
+      g.addColorStop(1,`hsla(${b.hue},90%,60%,0)`);
+      ctx.fillStyle=g;ctx.fill();
+    });
+
+    bokeh.forEach(p=>{
+      if(!reduce){p.x+=p.vx;p.y+=p.vy;p.ph+=0.01*p.sp;}
+      if(p.y<-p.r){p.y=H+p.r;p.x=Math.random()*W;}
+      if(p.x<-p.r)p.x=W+p.r;if(p.x>W+p.r)p.x=-p.r;
+      const flick=p.base*(0.6+0.4*Math.sin(p.ph))+beat*0.28;
+      const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+      g.addColorStop(0,`hsla(${p.hue},90%,68%,${Math.min(flick,0.7)})`);
+      g.addColorStop(0.4,`hsla(${p.hue},90%,60%,${Math.min(flick*0.5,0.4)})`);
+      g.addColorStop(1,`hsla(${p.hue},90%,60%,0)`);
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+    });
+
+    ctx.globalCompositeOperation='source-over';
+    const baseY=H*1.02,unit=H*0.16;
+    crowd.forEach(person=>{
+      const bob=reduce?0:Math.sin(time*person.sp+person.ph)*6*DPR;
+      const s=person.scale*DPR,x=person.x,headR=16*s;
+      const shoulderY=baseY-unit*person.scale+bob,headY=shoulderY-headR*2.4;
+      ctx.fillStyle='#040407';
+      ctx.beginPath();ctx.ellipse(x,shoulderY+unit*0.5,42*s,unit*0.9,0,Math.PI,0);ctx.fill();
+      ctx.fillRect(x-42*s,shoulderY+unit*0.5,84*s,unit);
+      ctx.beginPath();ctx.arc(x,headY,headR,0,Math.PI*2);ctx.fill();
+      if(person.arm){
+        ctx.strokeStyle='#040407';ctx.lineWidth=12*s;ctx.lineCap='round';
+        ctx.beginPath();ctx.moveTo(x+18*s,shoulderY);ctx.lineTo(x+30*s,headY-headR*1.8+bob*0.5);ctx.stroke();
+      }
+      if(person.phone){
+        const phx=x-22*s,phy=headY-headR*0.6;
+        const pg=ctx.createRadialGradient(phx,phy,0,phx,phy,14*s);const pa=0.5+0.4*beat;
+        pg.addColorStop(0,`hsla(${person.phoneHue},90%,72%,${pa})`);
+        pg.addColorStop(1,`hsla(${person.phoneHue},90%,72%,0)`);
+        ctx.fillStyle=pg;ctx.beginPath();ctx.arc(phx,phy,14*s,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=`hsla(${person.phoneHue},95%,80%,${pa})`;
+        ctx.fillRect(phx-2.5*s,phy-4*s,5*s,8*s);
+      }
+    });
+    ctx.globalCompositeOperation='lighter';
+
+    if(running&&!reduce)raf=requestAnimationFrame(draw);
+  }
+
+  function start(){if(!running){running=true;raf=requestAnimationFrame(draw);}}
+  function stop(){running=false;cancelAnimationFrame(raf);}
+
+  init();
+  if(reduce){draw(0);}else{raf=requestAnimationFrame(draw);}
+
+  let rt;
+  addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{init();if(reduce)draw(0);},200);});
+  document.addEventListener('visibilitychange',()=>{document.hidden?stop():start();});
+
+  // accordion: one open at a time
+  document.querySelectorAll('details.qa').forEach(d=>{
+    d.addEventListener('toggle',()=>{
+      if(d.open){document.querySelectorAll('details.qa').forEach(o=>{if(o!==d)o.open=false;});}
+    });
+  });
+
+  // reveal observer
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.16});
+  document.querySelectorAll('section.block .idx, section.block .lede, section.block .two > *, .step, .pain, .reveal').forEach((el,i)=>{
+    el.classList.add('reveal');el.style.transitionDelay=(i%3*0.06)+'s';io.observe(el);
+  });
+})();
